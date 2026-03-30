@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AloqaPro - Hodimlar paneli</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #d6dbe2; min-height: 100vh; }
+
+/* ===================== LOGIN ===================== */
+#loginPage {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; background: #d6dbe2;
+}
+.login-box {
+  background: white; padding: 44px 38px; border-radius: 16px;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.12); width: 350px; text-align: center;
+}
+.login-logo { font-size: 32px; font-weight: 800; color: #2c3e50; margin-bottom: 4px; }
+.login-logo span { color: #5b7fa6; }
+.login-sub { color: #aaa; font-size: 13px; margin-bottom: 26px; }
+.login-box input {
+  width: 100%; padding: 11px 14px; margin-bottom: 13px;
+  border: 1.5px solid #ddd; border-radius: 9px; font-size: 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.login-box input:focus { border-color: #5b7fa6; }
+.login-box button {
+  width: 100%; padding: 12px; background: #4a6585; color: white;
+  border: none; border-radius: 9px; font-size: 15px; cursor: pointer; font-weight: 700;
+  transition: background 0.2s;
+}
+.login-box button:hover { background: #3a5275; }
+.login-err { color: #dc3545; font-size: 13px; margin-top: 9px; min-height: 18px; }
+
+/* ===================== APP ===================== */
+#app { display: none; min-height: 100vh; flex-direction: column; }
+
+/* ===================== HEADER ===================== */
+.header {
+  background: #7a96ae; padding: 0 28px;
+  display: flex; align-items: stretch; justify-content: space-between; flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 18px; }
+.logo-img-wrap { padding: 14px 0; }
+.logo-text { font-size: 26px; font-weight: 800; color: white; }
+.logo-text span { color: #c8dae8; }
+.header-title-box {
+  background: #8faabb; padding: 14px 32px; margin: 0;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.header-title { color: white; font-size: 20px; font-weight: 700; }
+.header-hodim { color: #d8eaf5; font-size: 13px; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
+.header-date { color: white; font-size: 14px; font-weight: 500; }
+.flags { display: flex; gap: 4px; }
+.flag-box {
+  width: 38px; height: 25px; border-radius: 4px; cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.4); overflow: hidden; transition: border-color 0.2s;
+}
+.flag-box.active-lang { border-color: white; }
+.flag-uz { background: linear-gradient(to bottom, #1eb53a 33.3%, white 33.3%, white 66.6%, #0099b5 66.6%); }
+.flag-ru { background: linear-gradient(to bottom, white 33.3%, #003CB3 33.3%, #003CB3 66.6%, #CC0000 66.6%); }
+.chiqish-btn {
+  padding: 9px 22px; background: #c8d4dc; color: #2c3e50;
+  border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.chiqish-btn:hover { background: #b0c0cc; }
+
+/* ===================== CONTENT ===================== */
+.content { padding: 22px 24px; flex: 1; overflow-y: auto; }
+
+/* ===================== GRID ===================== */
+.main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+/* ===================== CARD ===================== */
+.card {
+  background: white; border-radius: 14px; padding: 22px 24px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+.card-title { font-size: 16px; font-weight: 700; color: #2c3e50; margin-bottom: 16px; }
+
+/* ===================== STATUS BADGES ===================== */
+.badges-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.badge {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+}
+.badge-month { background: #e8f4fd; color: #1a6dad; }
+.badge-status-green { background: #d4f5e2; color: #1a7a3c; }
+.badge-status-yellow { background: #fff4cc; color: #8a6200; }
+.badge-status-red { background: #fde0e0; color: #8a1a1a; }
+.badge-status-gray { background: #eee; color: #666; }
+.badge-kechikish { background: #fff0e0; color: #a04000; }
+
+/* ===================== ACTION BUTTONS ===================== */
+.action-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.act-btn {
+  padding: 13px 8px; border: none; border-radius: 10px; font-size: 14px;
+  font-weight: 700; cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.act-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-green { background: #27a85a; color: white; }
+.btn-green:hover:not(:disabled) { background: #1e8046; }
+.btn-orange { background: #e8940a; color: white; }
+.btn-orange:hover:not(:disabled) { background: #c07800; }
+.btn-red { background: #e03535; color: white; }
+.btn-red:hover:not(:disabled) { background: #b82020; }
+
+/* ===================== TIMERS ===================== */
+.timers-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 12px; }
+.timer-box { background: #f6f8fa; border-radius: 10px; padding: 14px 16px; }
+.timer-label { font-size: 12px; color: #999; margin-bottom: 6px; }
+.timer-value { font-size: 28px; font-weight: 700; color: #2c3e50; font-family: 'Courier New', monospace; }
+.timer-desc { font-size: 11px; color: #bbb; margin-top: 4px; }
+.info-note { font-size: 12px; color: #aaa; margin-top: 10px; line-height: 1.5; }
+
+/* ===================== INFO GRID ===================== */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.info-item { background: #f6f8fa; border-radius: 10px; padding: 14px 16px; }
+.info-item .lbl { font-size: 12px; color: #999; margin-bottom: 6px; }
+.info-item .val { font-size: 15px; font-weight: 700; color: #2c3e50; }
+
+/* ===================== TARIX TABLE ===================== */
+.tarix-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.tarix-filters { display: flex; align-items: center; gap: 8px; }
+.tarix-filters input[type="month"] {
+  padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 8px;
+  font-size: 13px; outline: none; background: white;
+}
+.tarix-filters input[type="month"]:focus { border-color: #5b7fa6; }
+.btn-joriy {
+  padding: 7px 16px; background: #4a6585; color: white;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.btn-joriy:hover { background: #3a5275; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead tr { border-bottom: 2px solid #eee; }
+th { padding: 9px 8px; text-align: left; color: #777; font-weight: 600; font-size: 12px; }
+td { padding: 9px 8px; border-bottom: 1px solid #f2f2f2; color: #333; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafbfc; }
+
+.t-badge { display: inline-block; padding: 2px 10px; border-radius: 14px; font-size: 11px; font-weight: 700; }
+.t-keldi { background: #d4f5e2; color: #1a7a3c; }
+.t-kechikkan { background: #fff4cc; color: #8a6200; }
+.t-kelmadi { background: #fde0e0; color: #8a1a1a; }
+
+.kechikish-stat { background: #f6f8fa; border-radius: 10px; padding: 14px 18px; margin-top: 14px; }
+.kechikish-stat .lbl { font-size: 13px; color: #888; margin-bottom: 4px; }
+.kechikish-stat .val { font-size: 22px; font-weight: 700; color: #2c3e50; }
+
+.empty-row { text-align: center; color: #bbb; padding: 24px; font-size: 13px; }
+
+/* ===================== ESLATMA MODAL ===================== */
+#eslatmaModal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+  z-index: 9999; display: flex; align-items: center; justify-content: center;
+}
+.eslatma-box {
+  background: white; border-radius: 18px; padding: 38px 36px; max-width: 520px; width: 90%;
+  box-shadow: 0 10px 48px rgba(0,0,0,0.18); text-align: center;
+}
+.eslatma-box p {
+  font-size: 17px; font-weight: 700; color: #c0392b; line-height: 1.65; margin-bottom: 28px;
+}
+.eslatma-ok {
+  padding: 14px 60px; background: #27a85a; color: white;
+  border: none; border-radius: 12px; font-size: 17px; font-weight: 700; cursor: pointer;
+  transition: background 0.2s;
+}
+.eslatma-ok:hover { background: #1e8046; }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 800px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .action-btns { grid-template-columns: 1fr; }
+  .timers-row { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== ESLATMA MODAL ==================== -->
+<div id="eslatmaModal">
+  <div class="eslatma-box">
+    <p id="eslatmaText">
+      Eslatma: "Ishni yakunlash" tugmasini faqat ish kuni to'liq tugagandan keyin bosing.
+      Uni vaqtidan oldin bosish ish kunining erta yakunlanishiga sabab bo'ladi va bu KPI
+      natijalariga salbiy ta'sir qilishi mumkin.
+    </p>
+    <button class="eslatma-ok" onclick="closeEslatma()">OK</button>
+  </div>
+</div>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="loginPage">
+  <div class="login-box">
+    <div class="login-logo">Aloqa<span>Pro</span></div>
+    <div class="login-sub" id="loginSub">Hodimlar tizimi</div>
+    <input type="text" id="li_login" placeholder="Login" autocomplete="off">
+    <input type="password" id="li_parol" placeholder="Parol" onkeydown="if(event.key==='Enter') doLogin()">
+    <button onclick="doLogin()" id="loginBtn">Kirish</button>
+    <div class="login-err" id="li_err"></div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-img-wrap">
+        <div class="logo-text">Aloqa<span>Pro</span></div>
+      </div>
+      <div class="header-title-box">
+        <div class="header-title" id="hdr_title">Hodimlar paneli</div>
+        <div class="header-hodim" id="hdr_hodim"></div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="header-date" id="hdr_date"></span>
+      <div class="flags">
+        <div class="flag-box flag-uz active-lang" id="flag_uz" title="O'zbek" onclick="setLang('uz')"></div>
+        <div class="flag-box flag-ru" id="flag_ru" title="Русский" onclick="setLang('ru')"></div>
+      </div>
+      <button class="chiqish-btn" id="chiqishBtn" onclick="doLogout()">Chiqish</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="main-grid">
+
+      <!-- CHAP: ISH JARAYONI -->
+      <div class="card">
+        <div class="card-title" id="txt_bugungi_ish">Bugungi ish jarayoni</div>
+        <div class="badges-row">
+          <span class="badge badge-month" id="badge_oy"></span>
+          <span class="badge" id="badge_status"></span>
+          <span class="badge badge-kechikish" id="badge_kechikish"></span>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-btns">
+          <button class="act-btn btn-green" id="btn_boshlash" onclick="ishBoshlash()">
+            <span id="txt_boshlash">Ishni boshlash</span>
+          </button>
+          <button class="act-btn btn-orange" id="btn_tushlik" onclick="tushlikToggle()" disabled>
+            <span id="txt_tushlik">Tushlik vaqti</span>
+          </button>
+          <button class="act-btn btn-red" id="btn_yakunlash" onclick="ishYakunlash()" disabled>
+            <span id="txt_yakunlash">Ishni yakunlash</span>
+          </button>
+        </div>
+
+        <!-- TIMERS -->
+        <div class="timers-row">
+          <div class="timer-box">
+            <div class="timer-label" id="txt_ish_vaqti">Ish vaqti</div>
+            <div class="timer-value" id="timer_ish">00:00:00</div>
+            <div class="timer-desc" id="txt_ish_desc">Ish boshlanganda ishlaydi, tushlikda pauza bo'ladi</div>
+          </div>
+          <div class="timer-box">
+            <div class="timer-label" id="txt_tushlik_vaqti">Tushlik vaqti</div>
+            <div class="timer-value" id="timer_tushlik">00:00:00</div>
+            <div class="timer-desc" id="txt_tushlik_desc">Faqat tushlik vaqtida yuradi</div>
+          </div>
+        </div>
+
+        <div class="info-note" id="txt_note">
+          Yangi kun boshlanganida bugungi vaqtlar avtomatik 0 ga tushadi. O'tgan kunlar esa shu oyning tarixida saqlanadi.
+        </div>
+      </div>
+
+      <!-- O'NG: BUGUNGI MA'LUMOT -->
+      <div class="card">
+        <div class="card-title" id="txt_bugungi_malumot">Bugungi ma'lumot</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="lbl" id="txt_ish_boshlagan">Ish boshlagan vaqt</div>
+            <div class="val" id="info_ish_boshlagan">-</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl" id="txt_ish_tugagan">Ish tugagan vaqt</div>
+            <div class="val" id="info_ish_tugagan">-</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl" id="txt_tushlik_boshlagan">Tushlik boshlangan</div>
+            <div class="val" id="info_tushlik_boshlagan">-</div>
+          </div>
+          <div class="info-item">
+            <div class="lbl" id="txt_tushlik_tugagan">Tushlik tugagan</div>
+            <div class="val" id="info_tushlik_tugagan">-</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-grid -->
+
+    <!-- OY BO'YICHA TARIX -->
+    <div class="card">
+      <div class="tarix-head">
+        <div class="card-title" id="txt_tarix">Oy bo'yicha tarix</div>
+        <div class="tarix-filters">
+          <input type="month" id="f_month" onchange="loadTarix()">
+          <button class="btn-joriy" id="btn_joriy" onclick="setJoriyOy()">Joriy oy</button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th id="th_sana">Sana</th>
+            <th id="th_ish_boshlagan">Ish boshlagan</th>
+            <th id="th_tushlik_boshlagan">Tushlik boshlangan</th>
+            <th id="th_tushlik_tugagan">Tushlik tugagan</th>
+            <th id="th_ish_tugagan">Ish tugagan</th>
+            <th id="th_kechikish">Kechikish</th>
+            <th id="th_ish_vaqti">Ish vaqti</th>
+            <th id="th_tushlik_vaqti">Tushlik vaqti</th>
+            <th id="th_status">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tarix_body">
+          <tr><td colspan="10" class="empty-row" id="tarix_empty">Yuklanmoqda...</td></tr>
+        </tbody>
+      </table>
+
+      <div class="kechikish-stat">
+        <div class="lbl" id="txt_kechikish_oy">Kechikishlar (oy)</div>
+        <div class="val" id="kechikish_count">0</div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ============================================================
+//  SUPABASE CONFIG
+// ============================================================
+var SUPABASE_URL = 'https://nwkefvkimhtepzenwnwj.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_qWos73KFmtm0UDdpLHfrEw_-U240WbT';
+
+var sb = null;
+try {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch(e) {
+  console.warn('Supabase ulanmadi:', e.message);
+}
+
+// ============================================================
+//  TILLAR
+// ============================================================
+var LANG = localStorage.getItem('hodim_lang') || 'uz';
+
+var T = {
+  uz: {
+    loginSub: 'Hodimlar tizimi',
+    loginBtn: 'Kirish',
+    loginErr: 'Login yoki parol noto\'g\'ri!',
+    hdrTitle: 'Hodimlar paneli',
+    chiqish: 'Chiqish',
+    bugungiIsh: 'Bugungi ish jarayoni',
+    bugungiMalumot: 'Bugungi ma\'lumot',
+    tarix: 'Oy bo\'yicha tarix',
+    boshlash: 'Ishni boshlash',
+    tushlik: 'Tushlik vaqti',
+    tushlikYakunlash: 'Tushlikni yakunlash',
+    yakunlash: 'Ishni yakunlash',
+    ishVaqti: 'Ish vaqti',
+    tushlikVaqti: 'Tushlik vaqti',
+    ishDesc: 'Ish boshlanganda ishlaydi, tushlikda pauza bo\'ladi',
+    tushlikDesc: 'Faqat tushlik vaqtida yuradi',
+    note: 'Yangi kun boshlanganida bugungi vaqtlar avtomatik 0 ga tushadi. O\'tgan kunlar esa shu oyning tarixida saqlanadi.',
+    ishBoshlagan: 'Ish boshlagan vaqt',
+    ishTugagan: 'Ish tugagan vaqt',
+    tushlikBoshlangan: 'Tushlik boshlangan',
+    tushlikTugagan: 'Tushlik tugagan',
+    joriyOy: 'Joriy oy',
+    thSana: 'Sana',
+    thIshBoshlagan: 'Ish boshlagan',
+    thTushlikBoshlangan: 'Tushlik boshlangan',
+    thTushlikTugagan: 'Tushlik tugagan',
+    thIshTugagan: 'Ish tugagan',
+    thKechikish: 'Kechikish',
+    thIshVaqti: 'Ish vaqti',
+    thTushlikVaqti: 'Tushlik vaqti',
+    thStatus: 'Status',
+    kechikishOy: 'Kechikishlar (oy)',
+    statusBoshlanmagan: 'Boshlanmagan',
+    statusKeldi: 'Ishga keldi',
+    statusKechikkan: 'Kechikkan',
+    statusYakunlandi: 'Yakunlandi',
+    statusTushlik: 'Tushlikda',
+    emptyRow: 'Bu oy uchun ma\'lumot yo\'q',
+    eslatma: 'Eslatma: "Ishni yakunlash" tugmasini faqat ish kuni to\'liq tugagandan keyin bosing. Uni vaqtidan oldin bosish ish kunining erta yakunlanishiga sabab bo\'ladi va bu KPI natijalariga salbiy ta\'sir qilishi mumkin.',
+    kechikishPrefix: 'Kechikish: ',
+    daqiqa: 'daqiqa',
+    yakunlandiMsg: 'Ish kuni yakunlandi! Yaxshi dam oling.',
+    allaqachon: 'Ish kuni allaqachon yakunlangan!',
+  },
+  ru: {
+    loginSub: 'Система сотрудников',
+    loginBtn: 'Войти',
+    loginErr: 'Неверный логин или пароль!',
+    hdrTitle: 'Панель сотрудника',
+    chiqish: 'Выйти',
+    bugungiIsh: 'Сегодняшний рабочий процесс',
+    bugungiMalumot: 'Сегодняшние данные',
+    tarix: 'История за месяц',
+    boshlash: 'Начать работу',
+    tushlik: 'Обед',
+    tushlikYakunlash: 'Завершить обед',
+    yakunlash: 'Завершить работу',
+    ishVaqti: 'Рабочее время',
+    tushlikVaqti: 'Время обеда',
+    ishDesc: 'Работает после начала, пауза во время обеда',
+    tushlikDesc: 'Работает только во время обеда',
+    note: 'В начале нового дня время автоматически сбрасывается. Прошлые дни сохраняются в истории месяца.',
+    ishBoshlagan: 'Начало работы',
+    ishTugagan: 'Конец работы',
+    tushlikBoshlangan: 'Начало обеда',
+    tushlikTugagan: 'Конец обеда',
+    joriyOy: 'Текущий месяц',
+    thSana: 'Дата',
+    thIshBoshlagan: 'Начало работы',
+    thTushlikBoshlangan: 'Начало обеда',
+    thTushlikTugagan: 'Конец обеда',
+    thIshTugagan: 'Конец работы',
+    thKechikish: 'Опоздание',
+    thIshVaqti: 'Рабочее время',
+    thTushlikVaqti: 'Время обеда',
+    thStatus: 'Статус',
+    kechikishOy: 'Опозданий (месяц)',
+    statusBoshlanmagan: 'Не начато',
+    statusKeldi: 'На работе',
+    statusKechikkan: 'Опоздал',
+    statusYakunlandi: 'Завершено',
+    statusTushlik: 'На обеде',
+    emptyRow: 'Нет данных за этот месяц',
+    eslatma: 'Внимание: кнопку "Завершить работу" нажимайте только после полного завершения рабочего дня. Нажатие раньше времени приведёт к раннему завершению дня, что может негативно сказаться на результатах KPI.',
+    kechikishPrefix: 'Опоздание: ',
+    daqiqa: 'мин',
+    yakunlandiMsg: 'Рабочий день завершён! Хорошего отдыха.',
+    allaqachon: 'Рабочий день уже завершён!',
+  }
+};
+
+function t(key) { return T[LANG][key] || key; }
+
+function setLang(lang) {
+  LANG = lang;
+  localStorage.setItem('hodim_lang', lang);
+  document.getElementById('flag_uz').classList.toggle('active-lang', lang === 'uz');
+  document.getElementById('flag_ru').classList.toggle('active-lang', lang === 'ru');
+  applyLang();
+}
+
+function applyLang() {
+  document.getElementById('loginSub').textContent = t('loginSub');
+  document.getElementById('loginBtn').textContent = t('loginBtn');
+  document.getElementById('chiqishBtn').textContent = t('chiqish');
+  document.getElementById('hdr_title').textContent = t('hdrTitle');
+  document.getElementById('txt_bugungi_ish').textContent = t('bugungiIsh');
+  document.getElementById('txt_bugungi_malumot').textContent = t('bugungiMalumot');
+  document.getElementById('txt_tarix').textContent = t('tarix');
+  document.getElementById('txt_boshlash').textContent = t('boshlash');
+  document.getElementById('txt_yakunlash').textContent = t('yakunlash');
+  document.getElementById('txt_ish_vaqti').textContent = t('ishVaqti');
+  document.getElementById('txt_tushlik_vaqti').textContent = t('tushlikVaqti');
+  document.getElementById('txt_ish_desc').textContent = t('ishDesc');
+  document.getElementById('txt_tushlik_desc').textContent = t('tushlikDesc');
+  document.getElementById('txt_note').textContent = t('note');
+  document.getElementById('txt_ish_boshlagan').textContent = t('ishBoshlagan');
+  document.getElementById('txt_ish_tugagan').textContent = t('ishTugagan');
+  document.getElementById('txt_tushlik_boshlagan').textContent = t('tushlikBoshlangan');
+  document.getElementById('txt_tushlik_tugagan').textContent = t('tushlikTugagan');
+  document.getElementById('btn_joriy').textContent = t('joriyOy');
+  document.getElementById('th_sana').textContent = t('thSana');
+  document.getElementById('th_ish_boshlagan').textContent = t('thIshBoshlagan');
+  document.getElementById('th_tushlik_boshlangan').textContent = t('thTushlikBoshlangan');
+  document.getElementById('th_tushlik_tugagan').textContent = t('thTushlikTugagan');
+  document.getElementById('th_ish_tugagan').textContent = t('thIshTugagan');
+  document.getElementById('th_kechikish').textContent = t('thKechikish');
+  document.getElementById('th_ish_vaqti').textContent = t('thIshVaqti');
+  document.getElementById('th_tushlik_vaqti').textContent = t('thTushlikVaqti');
+  document.getElementById('th_status').textContent = t('thStatus');
+  document.getElementById('txt_kechikish_oy').textContent = t('kechikishOy');
+  document.getElementById('eslatmaText').textContent = t('eslatma');
+  // tushlik button
+  var tushlikBtn = document.getElementById('txt_tushlik');
+  if (STATE.tushlikda) {
+    tushlikBtn.textContent = t('tushlikYakunlash');
+  } else {
+    tushlikBtn.textContent = t('tushlik');
+  }
+  updateBadges();
+}
+
+// ============================================================
+//  STATE
+// ============================================================
+var currentUser = null;
+var STATE = {
+  ishBoshlagan: false,
+  ishYakunlandi: false,
+  tushlikda: false,
+  ishStart: null,       // timestamp ms
+  tushlikStart: null,   // timestamp ms
+  ishElapsed: 0,        // ms (to'plangan)
+  tushlikElapsed: 0,    // ms
+  bugunSana: '',
+  ishBoshlaganVaqt: null,
+  ishTugaganVaqt: null,
+  tushlikBoshlaganVaqt: null,
+  tushlikTugaganVaqt: null,
+  kechikishDaqiqa: 0,
+};
+var timerInterval = null;
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function todayStr() {
+  var n = new Date();
+  return n.getFullYear() + '-' +
+    String(n.getMonth()+1).padStart(2,'0') + '-' +
+    String(n.getDate()).padStart(2,'0');
+}
+function currentMonth() {
+  var n = new Date();
+  return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0');
+}
+function nowTimeStr() {
+  var n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' +
+    String(n.getMinutes()).padStart(2,'0') + ':' +
+    String(n.getSeconds()).padStart(2,'0');
+}
+function msToHMS(ms) {
+  var s = Math.floor(ms / 1000);
+  var h = Math.floor(s / 3600);
+  var m = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+function msToSoat(ms) {
+  return ms / 3600000;
+}
+function fmtDate(d) {
+  if (!d) return '-';
+  var p = d.split('-');
+  return p[2] + '.' + p[1] + '.' + p[0];
+}
+function fmtMonthLabel(m) {
+  if (!m) return '';
+  var p = m.split('-');
+  return p[1] + '.' + p[0];
+}
+
+// ============================================================
+//  ESLATMA
+// ============================================================
+function closeEslatma() {
+  document.getElementById('eslatmaModal').style.display = 'none';
+  localStorage.setItem('eslatma_shown_' + (currentUser ? currentUser.id : 'x'), '1');
+}
+
+function showEslatmaIfNeeded() {
+  var key = 'eslatma_shown_' + currentUser.id;
+  if (!localStorage.getItem(key)) {
+    document.getElementById('eslatmaModal').style.display = 'flex';
+  }
+}
+
+// ============================================================
+//  LOGIN / LOGOUT
+// ============================================================
+async function doLogin() {
+  var login = document.getElementById('li_login').value.trim();
+  var parol = document.getElementById('li_parol').value;
+  var errEl = document.getElementById('li_err');
+  errEl.textContent = '';
+
+  if (!sb) { errEl.textContent = 'Supabase ulanmagan!'; return; }
+  if (!login || !parol) { errEl.textContent = t('loginErr'); return; }
+
+  var res = await sb.from('hodimlar').select('*').eq('login', login).eq('parol', parol).single();
+  if (res.error || !res.data) {
+    errEl.textContent = t('loginErr');
+    return;
+  }
+  currentUser = res.data;
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  document.getElementById('hdr_hodim').textContent = currentUser.ism_familiya;
+  applyLang();
+  initApp();
+}
+
+function doLogout() {
+  stopTimers();
+  currentUser = null;
+  STATE = {
+    ishBoshlagan: false, ishYakunlandi: false, tushlikda: false,
+    ishStart: null, tushlikStart: null, ishElapsed: 0, tushlikElapsed: 0,
+    bugunSana: '', ishBoshlaganVaqt: null, ishTugaganVaqt: null,
+    tushlikBoshlaganVaqt: null, tushlikTugaganVaqt: null, kechikishDaqiqa: 0,
+  };
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('li_login').value = '';
+  document.getElementById('li_parol').value = '';
+  document.getElementById('timer_ish').textContent = '00:00:00';
+  document.getElementById('timer_tushlik').textContent = '00:00:00';
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+async function initApp() {
+  // Header date
+  var n = new Date();
+  document.getElementById('hdr_date').textContent =
+    'Bugun: ' + String(n.getDate()).padStart(2,'0') + '.' +
+    String(n.getMonth()+1).padStart(2,'0') + '.' + n.getFullYear();
+
+  // Badge oy
+  document.getElementById('badge_oy').textContent =
+    'Joriy oy: ' + currentMonth();
+
+  // f_month default
+  document.getElementById('f_month').value = currentMonth();
+
+  // LocalStorage dan bugungi holat yuklash
+  loadStateFromStorage();
+
+  // Supabase dan bugungi ma'lumot yuklash
+  await loadBugungiMalumot();
+
+  // Tarix yuklash
+  await loadTarix();
+
+  // Eslatma
+  showEslatmaIfNeeded();
+
+  // Timer davom ettirish
+  if (STATE.ishBoshlagan && !STATE.ishYakunlandi) {
+    startTimerLoop();
+  }
+
+  updateUI();
+}
+
+// ============================================================
+//  STORAGE — sahifa yangilansa ma'lumot o'chmasin
+// ============================================================
+function storageKey() {
+  return 'hodim_state_' + (currentUser ? currentUser.id : 'x') + '_' + todayStr();
+}
+
+function saveStateToStorage() {
+  var s = {
+    ishBoshlagan: STATE.ishBoshlagan,
+    ishYakunlandi: STATE.ishYakunlandi,
+    tushlikda: STATE.tushlikda,
+    ishStart: STATE.ishStart,
+    tushlikStart: STATE.tushlikStart,
+    ishElapsed: STATE.ishElapsed,
+    tushlikElapsed: STATE.tushlikElapsed,
+    bugunSana: STATE.bugunSana,
+    ishBoshlaganVaqt: STATE.ishBoshlaganVaqt,
+    ishTugaganVaqt: STATE.ishTugaganVaqt,
+    tushlikBoshlaganVaqt: STATE.tushlikBoshlaganVaqt,
+    tushlikTugaganVaqt: STATE.tushlikTugaganVaqt,
+    kechikishDaqiqa: STATE.kechikishDaqiqa,
+  };
+  localStorage.setItem(storageKey(), JSON.stringify(s));
+}
+
+function loadStateFromStorage() {
+  // Eski kunlarning ma'lumotini tozala
+  var today = todayStr();
+  for (var k in localStorage) {
+    if (k.startsWith('hodim_state_') && !k.endsWith('_' + today)) {
+      localStorage.removeItem(k);
+    }
+  }
+  var raw = localStorage.getItem(storageKey());
+  if (!raw) return;
+  try {
+    var s = JSON.parse(raw);
+    STATE.ishBoshlagan = s.ishBoshlagan || false;
+    STATE.ishYakunlandi = s.ishYakunlandi || false;
+    STATE.tushlikda = s.tushlikda || false;
+    STATE.ishStart = s.ishStart || null;
+    STATE.tushlikStart = s.tushlikStart || null;
+    STATE.ishElapsed = s.ishElapsed || 0;
+    STATE.tushlikElapsed = s.tushlikElapsed || 0;
+    STATE.bugunSana = s.bugunSana || '';
+    STATE.ishBoshlaganVaqt = s.ishBoshlaganVaqt || null;
+    STATE.ishTugaganVaqt = s.ishTugaganVaqt || null;
+    STATE.tushlikBoshlaganVaqt = s.tushlikBoshlaganVaqt || null;
+    STATE.tushlikTugaganVaqt = s.tushlikTugaganVaqt || null;
+    STATE.kechikishDaqiqa = s.kechikishDaqiqa || 0;
+  } catch(e) {}
+}
+
+// ============================================================
+//  SUPABASE — bugungi ma'lumot
+// ============================================================
+async function loadBugungiMalumot() {
+  if (!sb || !currentUser) return;
+  var today = todayStr();
+  var res = await sb.from('davomat').select('*')
+    .eq('hodim_id', currentUser.id).eq('sana', today).single();
+
+  if (res.data) {
+    var d = res.data;
+    // Agar storage bo'sh bo'lsa, supabase dan to'ldirish
+    if (!STATE.ishBoshlaganVaqt && d.kelgan_vaqt) {
+      STATE.ishBoshlaganVaqt = d.kelgan_vaqt ? d.kelgan_vaqt.slice(0,8) : null;
+      STATE.ishBoshlagan = true;
+    }
+    if (!STATE.ishTugaganVaqt && d.ketgan_vaqt) {
+      STATE.ishTugaganVaqt = d.ketgan_vaqt ? d.ketgan_vaqt.slice(0,8) : null;
+      STATE.ishYakunlandi = true;
+    }
+    STATE.kechikishDaqiqa = d.kechikish_daqiqa || 0;
+    updateInfoBoxes();
+    updateBadges();
+  }
+}
+
+// ============================================================
+//  ISH BOSHLASH
+// ============================================================
+async function ishBoshlash() {
+  if (STATE.ishBoshlagan) return;
+  if (STATE.ishYakunlandi) { alert(t('allaqachon')); return; }
+
+  var now = new Date();
+  STATE.ishBoshlagan = true;
+  STATE.ishStart = Date.now();
+  STATE.bugunSana = todayStr();
+  STATE.ishBoshlaganVaqt = nowTimeStr();
+
+  // Kechikish hisoblash (ish 09:00 dan boshlanadi deb)
+  var ishVaqti = new Date();
+  var standart = new Date();
+  standart.setHours(9, 0, 0, 0);
+  var kechikishMs = ishVaqti - standart;
+  STATE.kechikishDaqiqa = kechikishMs > 0 ? Math.floor(kechikishMs / 60000) : 0;
+
+  // Supabase ga yozish
+  if (sb) {
+    var status = STATE.kechikishDaqiqa > 0 ? 'kechikkan' : 'keldi';
+    await sb.from('davomat').upsert({
+      hodim_id: currentUser.id,
+      sana: STATE.bugunSana,
+      status: status,
+      kelgan_vaqt: STATE.ishBoshlaganVaqt,
+      kechikish_daqiqa: STATE.kechikishDaqiqa,
+      ish_soat: 0,
+    }, { onConflict: 'hodim_id,sana' });
+  }
+
+  saveStateToStorage();
+  startTimerLoop();
+  updateUI();
+  await loadTarix();
+}
+
+// ============================================================
+//  TUSHLIK TOGGLE
+// ============================================================
+async function tushlikToggle() {
+  if (!STATE.ishBoshlagan || STATE.ishYakunlandi) return;
+
+  if (!STATE.tushlikda) {
+    // Tushlik boshlash
+    STATE.tushlikda = true;
+    STATE.tushlikStart = Date.now();
+    STATE.tushlikBoshlaganVaqt = nowTimeStr();
+    // Ish elapsed to'xtash
+    STATE.ishElapsed += Date.now() - STATE.ishStart;
+    STATE.ishStart = null;
+  } else {
+    // Tushlik yakunlash
+    STATE.tushlikda = false;
+    STATE.tushlikElapsed += Date.now() - STATE.tushlikStart;
+    STATE.tushlikStart = null;
+    STATE.tushlikTugaganVaqt = nowTimeStr();
+    STATE.ishStart = Date.now(); // Ish qayta davom etadi
+  }
+
+  saveStateToStorage();
+  updateUI();
+}
+
+// ============================================================
+//  ISH YAKUNLASH
+// ============================================================
+async function ishYakunlash() {
+  if (!STATE.ishBoshlagan || STATE.ishYakunlandi) return;
+
+  stopTimers();
+
+  STATE.ishYakunlandi = true;
+  STATE.ishTugaganVaqt = nowTimeStr();
+
+  // Ish vaqti final
+  var finalIshMs = STATE.ishElapsed;
+  if (STATE.ishStart) finalIshMs += Date.now() - STATE.ishStart;
+  var finalIshSoat = msToSoat(finalIshMs);
+
+  // Tushlik vaqti final
+  var finalTushlikMs = STATE.tushlikElapsed;
+  if (STATE.tushlikStart) finalTushlikMs += Date.now() - STATE.tushlikStart;
+  var finalTushlikSoat = msToSoat(finalTushlikMs);
+
+  // Supabase ga yangilash
+  if (sb) {
+    await sb.from('davomat').upsert({
+      hodim_id: currentUser.id,
+      sana: STATE.bugunSana,
+      status: STATE.kechikishDaqiqa > 0 ? 'kechikkan' : 'keldi',
+      kelgan_vaqt: STATE.ishBoshlaganVaqt,
+      ketgan_vaqt: STATE.ishTugaganVaqt,
+      kechikish_daqiqa: STATE.kechikishDaqiqa,
+      ish_soat: parseFloat(finalIshSoat.toFixed(4)),
+      tushlik_boshlagan: STATE.tushlikBoshlaganVaqt,
+      tushlik_tugagan: STATE.tushlikTugaganVaqt,
+      tushlik_soat: parseFloat(finalTushlikSoat.toFixed(4)),
+    }, { onConflict: 'hodim_id,sana' });
+  }
+
+  saveStateToStorage();
+  updateUI();
+  await loadTarix();
+  alert(t('yakunlandiMsg'));
+}
+
+// ============================================================
+//  TIMER LOOP
+// ============================================================
+function startTimerLoop() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(tickTimers, 1000);
+}
+
+function stopTimers() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function tickTimers() {
+  var now = Date.now();
+
+  // Ish timer
+  var ishMs = STATE.ishElapsed;
+  if (STATE.ishStart && !STATE.tushlikda) ishMs += now - STATE.ishStart;
+  document.getElementById('timer_ish').textContent = msToHMS(ishMs);
+
+  // Tushlik timer
+  var tushlikMs = STATE.tushlikElapsed;
+  if (STATE.tushlikStart) tushlikMs += now - STATE.tushlikStart;
+  document.getElementById('timer_tushlik').textContent = msToHMS(tushlikMs);
+}
+
+// ============================================================
+//  UI UPDATE
+// ============================================================
+function updateUI() {
+  updateBadges();
+  updateButtons();
+  updateInfoBoxes();
+  applyLang();
+}
+
+function updateBadges() {
+  var badge = document.getElementById('badge_status');
+  var kBadge = document.getElementById('badge_kechikish');
+
+  if (!STATE.ishBoshlagan) {
+    badge.textContent = t('statusBoshlanmagan');
+    badge.className = 'badge badge-status-gray';
+  } else if (STATE.ishYakunlandi) {
+    badge.textContent = t('statusYakunlandi');
+    badge.className = 'badge badge-status-green';
+  } else if (STATE.tushlikda) {
+    badge.textContent = t('statusTushlik');
+    badge.className = 'badge badge-status-yellow';
+  } else if (STATE.kechikishDaqiqa > 0) {
+    badge.textContent = t('statusKechikkan');
+    badge.className = 'badge badge-status-yellow';
+  } else {
+    badge.textContent = t('statusKeldi');
+    badge.className = 'badge badge-status-green';
+  }
+
+  if (STATE.kechikishDaqiqa > 0) {
+    kBadge.textContent = t('kechikishPrefix') + STATE.kechikishDaqiqa + ' ' + t('daqiqa');
+    kBadge.style.display = '';
+  } else {
+    kBadge.style.display = 'none';
+  }
+}
+
+function updateButtons() {
+  var btnBoshlash = document.getElementById('btn_boshlash');
+  var btnTushlik = document.getElementById('btn_tushlik');
+  var btnYakunlash = document.getElementById('btn_yakunlash');
+
+  if (!STATE.ishBoshlagan) {
+    btnBoshlash.disabled = false;
+    btnTushlik.disabled = true;
+    btnYakunlash.disabled = true;
+  } else if (STATE.ishYakunlandi) {
+    btnBoshlash.disabled = true;
+    btnTushlik.disabled = true;
+    btnYakunlash.disabled = true;
+  } else {
+    btnBoshlash.disabled = true;
+    btnTushlik.disabled = false;
+    btnYakunlash.disabled = false;
+    // Tushlik button text
+    document.getElementById('txt_tushlik').textContent =
+      STATE.tushlikda ? t('tushlikYakunlash') : t('tushlik');
+  }
+}
+
+function updateInfoBoxes() {
+  document.getElementById('info_ish_boshlagan').textContent =
+    STATE.ishBoshlaganVaqt ? STATE.ishBoshlaganVaqt.slice(0,5) : '-';
+  document.getElementById('info_ish_tugagan').textContent =
+    STATE.ishTugaganVaqt ? STATE.ishTugaganVaqt.slice(0,5) : '-';
+  document.getElementById('info_tushlik_boshlagan').textContent =
+    STATE.tushlikBoshlaganVaqt ? STATE.tushlikBoshlaganVaqt.slice(0,5) : '-';
+  document.getElementById('info_tushlik_tugagan').textContent =
+    STATE.tushlikTugaganVaqt ? STATE.tushlikTugaganVaqt.slice(0,5) : '-';
+}
+
+// ============================================================
+//  TARIX
+// ============================================================
+async function loadTarix() {
+  if (!sb || !currentUser) return;
+
+  var month = document.getElementById('f_month').value || currentMonth();
+  var p = month.split('-');
+  var lastDay = new Date(parseInt(p[0]), parseInt(p[1]), 0).getDate();
+  var startDate = month + '-01';
+  var endDate = month + '-' + String(lastDay).padStart(2,'0');
+
+  var res = await sb.from('davomat').select('*')
+    .eq('hodim_id', currentUser.id)
+    .gte('sana', startDate)
+    .lte('sana', endDate)
+    .order('sana', { ascending: true });
+
+  var rows = res.data || [];
+  var kechikishSoni = 0;
+  var tbody = document.getElementById('tarix_body');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-row">' + t('emptyRow') + '</td></tr>';
+    document.getElementById('kechikish_count').textContent = '0';
+    return;
+  }
+
+  var html = '';
+  rows.forEach(function(r, i) {
+    var statusClass = r.status === 'keldi' ? 't-keldi' :
+                      r.status === 'kechikkan' ? 't-kechikkan' : 't-kelmadi';
+    var statusText = r.status === 'keldi' ? t('statusKeldi') :
+                     r.status === 'kechikkan' ? t('statusKechikkan') : 'Kelmadi';
+    if (r.status === 'kechikkan') kechikishSoni++;
+
+    var ishMs = (r.ish_soat || 0) * 3600000;
+    var tushlikMs = (r.tushlik_soat || 0) * 3600000;
+
+    html += '<tr>' +
+      '<td>' + (i+1) + '</td>' +
+      '<td>' + fmtDate(r.sana) + '</td>' +
+      '<td>' + (r.kelgan_vaqt ? r.kelgan_vaqt.slice(0,5) : '-') + '</td>' +
+      '<td>' + (r.tushlik_boshlagan ? r.tushlik_boshlagan.slice(0,5) : '-') + '</td>' +
+      '<td>' + (r.tushlik_tugagan ? r.tushlik_tugagan.slice(0,5) : '-') + '</td>' +
+      '<td>' + (r.ketgan_vaqt ? r.ketgan_vaqt.slice(0,5) : '-') + '</td>' +
+      '<td>' + (r.kechikish_daqiqa > 0 ? r.kechikish_daqiqa + ' ' + t('daqiqa') : '-') + '</td>' +
+      '<td>' + msToHMS(ishMs) + '</td>' +
+      '<td>' + msToHMS(tushlikMs) + '</td>' +
+      '<td><span class="t-badge ' + statusClass + '">' + statusText + '</span></td>' +
+      '</tr>';
+  });
+
+  tbody.innerHTML = html;
+  document.getElementById('kechikish_count').textContent = kechikishSoni;
+}
+
+function setJoriyOy() {
+  document.getElementById('f_month').value = currentMonth();
+  loadTarix();
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+// Sahifa yuklanishida til va eslatma
+applyLang();
+
+// Eslatma modal — faqat OK tugmasi yopishi uchun
+document.getElementById('eslatmaModal').addEventListener('click', function(e) {
+  e.stopPropagation(); // background click o'chirmaydi
+});
+// Eslatma box click ham yopmasin
+document.querySelector('.eslatma-box').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+// Shunda faqat OK tugmasi closeEslatma() ni chaqiradi
+</script>
+</body>
+</html>
